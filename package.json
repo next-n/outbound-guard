@@ -1,0 +1,36 @@
+{
+  "name": "resilient-http",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "demo:upstream": "npm run build && node --enable-source-maps dist/demo/upstream.js",
+    "demo:loadgen": "npm run build && node --enable-source-maps dist/demo/loadgen.js",
+    "prepublishOnly": "npm run test && npm run build"
+  },
+  "dependencies": {
+    "undici": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.8",
+    "tsup": "^8.5.1",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  }
+  
+}

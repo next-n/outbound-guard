@@ -1,0 +1,5 @@
+demo/
+test/
+docs/
+tsconfig.json
+tsup.config.ts
