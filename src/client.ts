@@ -77,7 +77,7 @@ export class ResilientHttpClient extends EventEmitter {
     if (mc?.enabled) {
       this.microCache = {
         enabled: true,
-        ttlMs: mc.ttlMs ?? 3000,
+        ttlMs: mc.ttlMs ?? 1000,
         maxEntries: mc.maxEntries ?? 500,
         keyFn: mc.keyFn ?? defaultMicroCacheKeyFn,
       };

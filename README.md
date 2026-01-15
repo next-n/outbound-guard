@@ -67,7 +67,63 @@ This prevents hammering unhealthy dependencies.
 
 No metrics backend required.
 
+### 6. GET micro-cache + request coalescing (optional)
+
+When enabled, outbound-guard can deduplicate identical GET requests:
+
+- Concurrent identical GETs share **one** upstream call.
+- Successful responses are cached for a very short TTL (default: 1s).
+- Only GET requests participate.
+
+This prevents thundering herd effects during spikes and reduces
+third-party API cost without introducing long-lived caching complexity.
+
 ---
+## A real-world failure mode this library prevents
+
+### Thundering herd on slow GET requests
+
+A very common production failure looks like this:
+
+- Your service receives a traffic spike.
+- Many requests trigger the **same GET call** (e.g. config, rates, profile, feature flags).
+- The upstream gets slow (not down — just slow).
+- Node keeps starting identical outbound requests.
+- Connections pile up.
+- Latency explodes.
+- Eventually the process collapses.
+
+Timeouts and retries don’t help here — they **make it worse**.
+
+### How outbound-guard helps
+
+When `microCache` is enabled:
+
+- **Only one real GET request** is sent upstream.
+- All concurrent identical GETs **share the same in-flight request**.
+- If the upstream takes 5 seconds, deduplication lasts for the full 5 seconds.
+- After success, the response is cached briefly (default: 1 seconds).
+- Requests during that window are served immediately — no new upstream calls.
+
+This dramatically reduces:
+- outbound request count
+- upstream pressure
+- cost
+- tail latency
+- failure amplification
+
+This is **request coalescing**, not long-lived caching.
+
+It is intentionally:
+- GET-only
+- short-lived
+- in-memory
+- process-local
+
+The goal is load shedding and cost reduction by collapsing duplicate work under concurrent load — not durability guarantees.
+
+
+-------------
 
 ## What this library does NOT do (by design)
 
@@ -112,6 +168,10 @@ const client = new ResilientHttpClient({
     failureThreshold: 0.5,
     cooldownMs: 800,
     halfOpenProbeCount: 3,
+  },
+  microCache: {
+    enabled: true,   // GET-only
+    ttlMs: 1000,     // short-lived
   },
 });
 
